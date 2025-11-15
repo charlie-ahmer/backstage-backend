@@ -27,7 +27,7 @@ def get_conn():
     return psycopg.connect(DATABASE_URL, autocommit=True)
 
 
-# ---------- Request models ----------
+# ---------- (Optional) Model for reference only ----------
 class BandApplicationPayload(BaseModel):
     contact_name: str | None = None
     contact_email: EmailStr
@@ -56,13 +56,15 @@ def check_auth(authorization: str | None):
 
 
 # ---------- Endpoints ----------
+
 @app.post("/api/intake/newsletter")
 def intake_newsletter(
     payload: dict,
     authorization: str | None = Header(default=None),
 ):
     """
-    Accepts the JSON body Fluent Forms sends and normalizes it into:
+    Accepts the JSON body Fluent Forms sends for the newsletter form and
+    normalizes it into:
       - email
       - first_name
       - how_did_you_hear
@@ -138,15 +140,86 @@ def intake_newsletter(
 
 @app.post("/api/intake/band-application")
 def intake_band_application(
-    payload: BandApplicationPayload,
+    payload: dict,
     authorization: str | None = Header(default=None),
 ):
+    """
+    Accepts the JSON body Fluent Forms sends for the band application form and
+    normalizes it into the band_applications table columns.
+    """
     check_auth(authorization)
+
+    # Same pattern as newsletter: Fluent sends top-level + __submission.user_inputs
+    submission = payload.get("__submission", {}) or {}
+    user_inputs = submission.get("user_inputs", {}) or {}
+
+    # Email can be named contact_email or customer_email, prefer user_inputs
+    contact_email = (
+        user_inputs.get("contact_email")
+        or user_inputs.get("customer_email")
+        or payload.get("contact_email")
+        or payload.get("customer_email")
+    )
+    if not contact_email:
+        raise HTTPException(status_code=400, detail="contact_email is required")
+
+    contact_name = (
+        user_inputs.get("contact_name")
+        or payload.get("contact_name")
+    )
+
+    contact_role = (
+        user_inputs.get("contact_role")
+        or payload.get("contact_role")
+    )
+
+    band_name = (
+        user_inputs.get("band_name")
+        or payload.get("band_name")
+    )
+    if not band_name:
+        raise HTTPException(status_code=400, detail="band_name is required")
+
+    band_genre = (
+        user_inputs.get("band_genre")
+        or payload.get("band_genre")
+    )
+
+    band_city = (
+        user_inputs.get("band_city")
+        or payload.get("band_city")
+    )
+
+    band_instagram = (
+        user_inputs.get("band_instagram")
+        or payload.get("band_instagram")
+    )
+
+    band_website = (
+        user_inputs.get("band_website")
+        or payload.get("band_website")
+    )
+
+    band_spotify = (
+        user_inputs.get("band_spotify")
+        or payload.get("band_spotify")
+    )
+
+    about_band = (
+        user_inputs.get("about_band")
+        or payload.get("about_band")
+    )
 
     with get_conn() as conn:
         with conn.cursor() as cur:
-            # Simplified insert to match the current model.
-            # Extra columns in the table (if any) will just be NULL.
+            # Columns list must match your actual table definition.
+            # This assumes you've created band_applications as:
+            #
+            #   contact_name, contact_email, contact_role,
+            #   band_name, band_genre, band_city,
+            #   band_instagram, band_website, band_spotify,
+            #   about_band
+            #
             cur.execute(
                 """
                 INSERT INTO band_applications (
@@ -158,16 +231,16 @@ def intake_band_application(
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
-                    payload.contact_name,
-                    payload.contact_email,
-                    payload.contact_role,
-                    payload.band_name,
-                    payload.band_genre,
-                    payload.band_city,
-                    payload.band_instagram,
-                    payload.band_website,
-                    payload.band_spotify,
-                    payload.about_band,
+                    contact_name,
+                    contact_email,
+                    contact_role,
+                    band_name,
+                    band_genre,
+                    band_city,
+                    band_instagram,
+                    band_website,
+                    band_spotify,
+                    about_band,
                 ),
             )
 
