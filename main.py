@@ -2,19 +2,22 @@ import os
 
 import psycopg
 from fastapi import FastAPI, Header, HTTPException
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from dotenv import load_dotenv
 
 # Load .env file
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
-API_TOKEN = os.getenv("API_TOKEN", "hawktuah_2421_secret_token")
+API_TOKEN = os.getenv("API_TOKEN")
+
 
 print("API_TOKEN loaded is:", repr(API_TOKEN))  
 
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL is not set. Check your .env file.")
+if not API_TOKEN:
+    raise RuntimeError("API_TOKEN is not set. Check your .env file.")
 
 
 app = FastAPI()
@@ -27,7 +30,7 @@ def get_conn():
 
 # ---------- Request models ----------
 class NewsletterPayload(BaseModel):
-    email: EmailStr
+    email: EmailStr = Field(alias="customer_email")
     first_name: str | None = None
     how_did_you_hear: str | None = None
     favorite_music: str | None = None
