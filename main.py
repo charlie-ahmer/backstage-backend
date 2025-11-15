@@ -157,7 +157,6 @@ def intake_band_application(
     band_city = user_inputs.get("band_city") or payload.get("band_city")
     band_instagram = user_inputs.get("band_instagram") or payload.get("band_instagram")
 
-    # Correct fields based on your DB and your form
     band_url = user_inputs.get("band_url") or payload.get("band_url")
     band_streaming = user_inputs.get("band_streaming") or payload.get("band_streaming")
 
