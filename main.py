@@ -143,89 +143,34 @@ def intake_band_application(
     payload: dict,
     authorization: str | None = Header(default=None),
 ):
-    """
-    Accepts the JSON body Fluent Forms sends for the band application form and
-    normalizes it into the band_applications table columns.
-    """
     check_auth(authorization)
 
-    # Same pattern as newsletter: Fluent sends top-level + __submission.user_inputs
     submission = payload.get("__submission", {}) or {}
     user_inputs = submission.get("user_inputs", {}) or {}
 
-    # Email can be named contact_email or customer_email, prefer user_inputs
-    contact_email = (
-        user_inputs.get("contact_email")
-        or user_inputs.get("customer_email")
-        or payload.get("contact_email")
-        or payload.get("customer_email")
-    )
-    if not contact_email:
-        raise HTTPException(status_code=400, detail="contact_email is required")
+    contact_name = user_inputs.get("contact_name") or payload.get("contact_name")
+    contact_email = user_inputs.get("contact_email") or payload.get("contact_email")
+    contact_role = user_inputs.get("contact_role") or payload.get("contact_role")
 
-    contact_name = (
-        user_inputs.get("contact_name")
-        or payload.get("contact_name")
-    )
+    band_name = user_inputs.get("band_name") or payload.get("band_name")
+    band_genre = user_inputs.get("band_genre") or payload.get("band_genre")
+    band_city = user_inputs.get("band_city") or payload.get("band_city")
+    band_instagram = user_inputs.get("band_instagram") or payload.get("band_instagram")
 
-    contact_role = (
-        user_inputs.get("contact_role")
-        or payload.get("contact_role")
-    )
+    # Correct fields based on your DB and your form
+    band_url = user_inputs.get("band_url") or payload.get("band_url")
+    band_streaming = user_inputs.get("band_streaming") or payload.get("band_streaming")
 
-    band_name = (
-        user_inputs.get("band_name")
-        or payload.get("band_name")
-    )
-    if not band_name:
-        raise HTTPException(status_code=400, detail="band_name is required")
-
-    band_genre = (
-        user_inputs.get("band_genre")
-        or payload.get("band_genre")
-    )
-
-    band_city = (
-        user_inputs.get("band_city")
-        or payload.get("band_city")
-    )
-
-    band_instagram = (
-        user_inputs.get("band_instagram")
-        or payload.get("band_instagram")
-    )
-
-    band_website = (
-        user_inputs.get("band_website")
-        or payload.get("band_website")
-    )
-
-    band_spotify = (
-        user_inputs.get("band_spotify")
-        or payload.get("band_spotify")
-    )
-
-    about_band = (
-        user_inputs.get("about_band")
-        or payload.get("about_band")
-    )
+    about_band = user_inputs.get("about_band") or payload.get("about_band")
 
     with get_conn() as conn:
         with conn.cursor() as cur:
-            # Columns list must match your actual table definition.
-            # This assumes you've created band_applications as:
-            #
-            #   contact_name, contact_email, contact_role,
-            #   band_name, band_genre, band_city,
-            #   band_instagram, band_website, band_spotify,
-            #   about_band
-            #
             cur.execute(
                 """
                 INSERT INTO band_applications (
                     contact_name, contact_email, contact_role,
                     band_name, band_genre, band_city,
-                    band_instagram, band_website, band_spotify,
+                    band_instagram, band_url, band_streaming,
                     about_band
                 )
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -238,8 +183,8 @@ def intake_band_application(
                     band_genre,
                     band_city,
                     band_instagram,
-                    band_website,
-                    band_spotify,
+                    band_url,
+                    band_streaming,
                     about_band,
                 ),
             )
