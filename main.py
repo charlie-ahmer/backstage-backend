@@ -36,6 +36,7 @@ class BandApplicationPayload(BaseModel):
     band_name: str
     band_genre: str | None = None
     band_city: str | None = None
+    band_state: str | None = None
     band_instagram: str | None = None
     band_website: str | None = None
     band_spotify: str | None = None
@@ -155,6 +156,7 @@ def intake_band_application(
     band_name = user_inputs.get("band_name") or payload.get("band_name")
     band_genre = user_inputs.get("band_genre") or payload.get("band_genre")
     band_city = user_inputs.get("band_city") or payload.get("band_city")
+    band_state = user_inputs.get("band_state") or payload.get("band_state")
     band_instagram = user_inputs.get("band_instagram") or payload.get("band_instagram")
 
     band_url = user_inputs.get("band_url") or payload.get("band_url")
@@ -168,11 +170,11 @@ def intake_band_application(
                 """
                 INSERT INTO band_applications (
                     contact_name, contact_email, contact_role,
-                    band_name, band_genre, band_city,
+                    band_name, band_genre, band_city, band_state,
                     band_instagram, band_url, band_streaming,
                     about_band
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
                     contact_name,
@@ -181,6 +183,7 @@ def intake_band_application(
                     band_name,
                     band_genre,
                     band_city,
+                    band_state,
                     band_instagram,
                     band_url,
                     band_streaming,
