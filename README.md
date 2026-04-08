@@ -95,17 +95,3 @@ Each form is configured with a webhook that sends JSON payloads to the backend A
 - Add tests for API endpoints and database operations
 - Add admin/reporting interface
 
-## Running Locally
-
-### Requirements
-- Python 3.10+
-- PostgreSQL database or Neon connection string
-
-### Setup
-
-```bash
-git clone <repo-url>
-cd backstage-backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
